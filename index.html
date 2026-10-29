@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101827">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>XAUUSD Signal Lab</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">ANALIZĂ TEHNICĂ · FĂRĂ ORDINE AUTOMATE</div>
+      <h1>XAUUSD <span>Signal Lab</span></h1>
+    </div>
+    <div id="connection" class="status"><i></i> Se conectează…</div>
+  </header>
+
+  <main>
+    <section class="price-card">
+      <div class="price-meta"><span>Preț spot aur / USD</span><span id="updated">—</span></div>
+      <div class="price-row"><strong id="price">—</strong><span id="changeTag" class="pill neutral">Așteaptă date</span></div>
+      <div class="price-meta bottom"><span id="source">Sursă: XAUS API</span><span id="freshness">—</span></div>
+      <div class="notice">Preț spot independent, nu cotația exactă FXPro. Datele sunt orientative și nu reprezintă preț executabil.</div>
+    </section>
+
+    <section class="signal-card" id="signalCard">
+      <div class="section-head"><h2>Semnal curent</h2><span id="confidence" class="pill neutral">—</span></div>
+      <div id="signal" class="signal-title">Se analizează piața…</div>
+      <p id="signalReason" class="signal-reason">Se încarcă istoricul de preț.</p>
+      <div class="signal-foot"><span id="timeframe">Analiză: M5 · confirmare M15/H1</span><span id="signalTime">—</span></div>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <div class="section-head"><h2>Indicatori</h2><span class="small">M5 aproximativ</span></div>
+        <div class="metric"><span>EMA 9 / EMA 26</span><strong id="ema">—</strong></div>
+        <div class="metric"><span>RSI (14)</span><strong id="rsi">—</strong></div>
+        <div class="metric"><span>MACD / Signal</span><strong id="macd">—</strong></div>
+        <div class="metric"><span>ATR (14)</span><strong id="atr">—</strong></div>
+        <div class="metric"><span>Direcție M15</span><strong id="m15">—</strong></div>
+        <div class="metric"><span>Direcție H1</span><strong id="h1">—</strong></div>
+      </article>
+      <article class="panel">
+        <div class="section-head"><h2>Niveluri</h2><span class="small">din datele disponibile</span></div>
+        <div class="level resistance"><span>Rezistență estimată</span><strong id="resistance">—</strong></div>
+        <div class="level support"><span>Suport estimat</span><strong id="support">—</strong></div>
+        <div class="metric"><span>Distanță până la suport</span><strong id="toSupport">—</strong></div>
+        <div class="metric"><span>Distanță până la rezistență</span><strong id="toResistance">—</strong></div>
+        <p class="small note">Nivelurile sunt calculate din maxime/minime recente; nu sunt linii oficiale ale brokerului.</p>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="section-head"><h2>Plan de urmărit</h2><span class="small">nu execută tranzacții</span></div>
+      <div class="plan-row"><span>Posibilă intrare</span><strong id="entry">—</strong></div>
+      <div class="plan-row"><span>Invalidare orientativă</span><strong id="stop">—</strong></div>
+      <div class="plan-row"><span>Țintă orientativă</span><strong id="target">—</strong></div>
+      <p id="planNote" class="small note">Așteaptă date suficiente.</p>
+    </section>
+
+    <section class="panel">
+      <div class="section-head"><h2>Ultimele alerte</h2><button id="clearAlerts" class="text-button">Șterge</button></div>
+      <div id="alerts" class="alerts"><p class="small">Alertele vor apărea aici când se schimbă semnalul.</p></div>
+    </section>
+
+    <section class="settings panel">
+      <div class="section-head"><h2>Setări</h2><span class="small">salvate pe acest dispozitiv</span></div>
+      <label class="toggle"><span>Alerte în aplicație</span><input id="inAppAlerts" type="checkbox" checked></label>
+      <label class="toggle"><span>Notificări browser (opțional)</span><input id="browserAlerts" type="checkbox"></label>
+      <label class="toggle"><span>Actualizare automată</span><input id="autoRefresh" type="checkbox" checked></label>
+      <div class="button-row"><button id="refreshBtn">Actualizează acum</button><button id="notifyBtn" class="secondary">Permite notificări</button></div>
+      <p class="small note">Reîmprospătare spot la ~60 secunde și reîncărcare periodică a istoricului. Nu ține aplicația deschisă în fundal dacă vrei alerte continue.</p>
+    </section>
+    <footer>Signal Lab · doar informativ · nu este consultanță financiară. Confirmă orice setup pe graficul brokerului înainte de a lua o decizie.</footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
