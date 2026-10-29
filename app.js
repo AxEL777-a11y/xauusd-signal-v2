@@ -114,7 +114,27 @@ function addAlert(title, body){
 function renderAlerts(){
   $("alerts").innerHTML=alerts.length?alerts.map(a=>`<div class="alert-item"><time>${fmtTime(a.time)}</time><strong>${a.title}</strong><br>${a.body}</div>`).join(""):'<p class="small">Nu există alerte încă.</p>';
 }
+function renderChart(cs){
+  const el=$("priceChart");
+  if(!cs || cs.length<10){el.innerHTML='<p class="small">Nu există suficiente puncte pentru grafic.</p>';return;}
+  const data=cs.slice(-60), closes=data.map(c=>c.c), e9=ema(closes,9), e26=ema(closes,26);
+  const W=700,H=270,left=12,right=58,top=12,bottom=24,plotW=W-left-right,plotH=H-top-bottom;
+  const lows=data.map(c=>c.l),highs=data.map(c=>c.h);let min=Math.min(...lows),max=Math.max(...highs);
+  const pad=(max-min)*0.08||max*0.001;min-=pad;max+=pad;
+  const x=i=>left+(i/(data.length-1))*plotW,y=v=>top+(max-v)/(max-min)*plotH;
+  const candleW=Math.max(3,Math.min(8,plotW/data.length*0.52));
+  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Grafic aproximativ XAU/USD M5 cu EMA 9 și EMA 26">`;
+  for(let i=0;i<5;i++){const gy=top+i*plotH/4,val=max-i*(max-min)/4;svg+=`<line x1="${left}" y1="${gy}" x2="${W-right+4}" y2="${gy}" stroke="#2a3950" stroke-width="1"/><text x="${W-4}" y="${gy+4}" fill="#9aa9bf" font-size="11" text-anchor="end">${val.toFixed(1)}</text>`;}
+  data.forEach((c,i)=>{const xx=x(i),yo=y(c.o),yc=y(c.c),yh=y(c.h),yl=y(c.l),color=c.c>=c.o?"#35d39a":"#ff6b78";svg+=`<line x1="${xx}" y1="${yh}" x2="${xx}" y2="${yl}" stroke="${color}" stroke-width="1.4"/>`;const bodyY=Math.min(yo,yc),bodyH=Math.max(1.5,Math.abs(yc-yo));svg+=`<rect x="${xx-candleW/2}" y="${bodyY}" width="${candleW}" height="${bodyH}" rx="0.7" fill="${color}" opacity=".9"/>`;});
+  const pathFor=arr=>{let d="",started=false;arr.forEach((v,i)=>{if(v==null)return;d+=(started?" L":"M")+x(i).toFixed(2)+" "+y(v).toFixed(2);started=true;});return d;};
+  svg+=`<path d="${pathFor(e9)}" fill="none" stroke="#53d5a4" stroke-width="2.2" stroke-linejoin="round"/><path d="${pathFor(e26)}" fill="none" stroke="#f2c66d" stroke-width="2.2" stroke-linejoin="round"/>`;
+  const last=data.at(-1),lastY=y(last.c);svg+=`<line x1="${left}" y1="${lastY}" x2="${W-right+4}" y2="${lastY}" stroke="#d5dfed" stroke-dasharray="4 4" opacity=".65"/>`;
+  svg+=`<text x="${left}" y="${H-5}" fill="#9aa9bf" font-size="11">${new Date(data[0].t).toLocaleTimeString("ro-MD",{hour:"2-digit",minute:"2-digit"})}</text><text x="${W-right}" y="${H-5}" fill="#9aa9bf" font-size="11" text-anchor="end">${new Date(last.t).toLocaleTimeString("ro-MD",{hour:"2-digit",minute:"2-digit"})}</text></svg>`;
+  el.innerHTML=svg;$("chartRange").textContent=`${data.length} lumânări aproximative`;$("chartLast").textContent=`Ultimul preț: ${fmt(last.c)}`;
+}
+
 function render(a, spotData){
+  renderChart(candles);
   $("price").textContent=fmt(spotData.spot_usd_oz);
   $("updated").textContent="Actualizat "+fmtTime(spotData.updated_at);
   $("freshness").textContent=spotData.data_state?.status==="stale"||spotData.stale?"DATE ÎNVECHITE":"Date API";
@@ -186,4 +206,4 @@ for(const id of ["autoRefresh","inAppAlerts","browserAlerts"]){
   if(saved!==null)$(id).checked=saved==="1";
 }
 refresh(true);
-setInterval(()=>{if($("autoRefresh").checked)refresh(false);},60000);
+setInterval(()=>{if($("autoRefresh").checked)refresh(false);},30000);

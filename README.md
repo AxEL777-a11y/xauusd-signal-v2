@@ -23,6 +23,10 @@ Aplicație statică pentru browser mobil/PC. Nu plasează tranzacții și nu se 
 9. Așteaptă publicarea. În Pages va apărea adresa, de forma `https://NUME-UTILIZATOR.github.io/xauusd-signal-lab/`.
 10. Deschide linkul în Safari pe iPhone. Pentru acces rapid: Share → Add to Home Screen.
 
+## Grafic
+
+Graficul SVG arată ultimele până la 60 de lumânări M5 aproximative și liniile EMA 9/26. Lumânările sunt agregate din puncte spot periodice și nu reproduc OHLC-ul MT5.
+
 ## Utilizare
 
 - Lasă aplicația deschisă pentru actualizări și alerte în aplicație.
