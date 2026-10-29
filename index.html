@@ -21,10 +21,11 @@
 
   <main>
     <section class="price-card">
-      <div class="price-meta"><span>Preț spot aur / USD</span><span id="updated">—</span></div>
+      <div class="price-meta"><span id="priceLabel">Bid FXPro GOLD</span><span id="updated">—</span></div>
       <div class="price-row"><strong id="price">—</strong><span id="changeTag" class="pill neutral">Așteaptă date</span></div>
+      <div id="askRow" class="quote-ask" hidden>Ask FXPro <strong id="ask">—</strong></div>
       <div class="price-meta bottom"><span id="source">Sursă: XAUS API</span><span id="freshness">—</span></div>
-      <div class="notice">Preț spot independent, nu cotația exactă FXPro. Datele sunt orientative și nu reprezintă preț executabil.</div>
+      <div id="priceNotice" class="notice">Preț spot independent, nu cotația exactă FXPro. Datele sunt orientative și nu reprezintă preț executabil.</div>
     </section>
 
     <section class="signal-card" id="signalCard">
@@ -36,16 +37,16 @@
 
 
     <section class="panel chart-panel">
-      <div class="section-head"><h2>Grafic XAU/USD</h2><span class="small">M5 aproximativ · EMA 9/26</span></div>
+      <div class="section-head"><h2>Grafic XAU/USD</h2><span id="chartMode" class="small">M5 aproximativ · EMA 9/26</span></div>
       <div class="chart-legend"><span><i class="legend-candle"></i> Lumânări estimate</span><span><i class="legend-ema9"></i> EMA 9</span><span><i class="legend-ema26"></i> EMA 26</span></div>
       <div id="priceChart" class="price-chart"><p class="small">Se încarcă graficul…</p></div>
       <div class="chart-footer"><span id="chartRange">Istoric disponibil: —</span><span id="chartLast">Ultimul preț: —</span></div>
-      <p class="small note">Graficul agregă puncte spot periodice în lumânări aproximative; nu este graficul MT5 și poate diferi de FXPro.</p>
+      <p id="chartNotice" class="small note">Graficul agregă puncte spot periodice în lumânări aproximative; nu este graficul MT5 și poate diferi de FXPro.</p>
     </section>
 
     <section class="grid">
       <article class="panel">
-        <div class="section-head"><h2>Indicatori</h2><span class="small">M5 aproximativ</span></div>
+        <div class="section-head"><h2>Indicatori</h2><span id="indicatorMode" class="small">M5 aproximativ</span></div>
         <div class="metric"><span>EMA 9 / EMA 26</span><strong id="ema">—</strong></div>
         <div class="metric"><span>RSI (14)</span><strong id="rsi">—</strong></div>
         <div class="metric"><span>MACD / Signal</span><strong id="macd">—</strong></div>

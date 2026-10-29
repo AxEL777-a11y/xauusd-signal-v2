@@ -1,4 +1,6 @@
 const API = "https://xaus.com/api/v1";
+// On the PC, read the local MT5 bridge. For a secured remote bridge, pass ?feed=https://your-host/data.
+const FXPRO_API = new URLSearchParams(location.search).get("feed") || "http://127.0.0.1:8765/data";
 const $ = id => document.getElementById(id);
 const fmt = n => Number.isFinite(n) ? n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}) : "—";
 const fmtTime = d => d ? new Date(d).toLocaleTimeString("ro-MD",{hour:"2-digit",minute:"2-digit",second:"2-digit"}) : "—";
@@ -8,6 +10,7 @@ let lastSeriesFetch = 0;
 let candles = [];
 let lastAnalysis = null;
 let alerts = [];
+let lastFxSnapshotAt = 0;
 
 function setStatus(kind, text){ $("connection").className="status "+kind; $("connection").lastChild.textContent=" "+text; }
 async function getJson(url){
@@ -65,6 +68,15 @@ function aggregate(points, minutes){
   }
   return [...bins.values()].sort((a,b)=>a.t-b.t);
 }
+function aggregateCandles(source, minutes){
+  const bins=new Map(), width=minutes*60000;
+  for(const c of source){
+    const bucket=Math.floor(c.t/width)*width, old=bins.get(bucket);
+    if(!old) bins.set(bucket,{t:bucket,o:c.o,h:c.h,l:c.l,c:c.c});
+    else {old.h=Math.max(old.h,c.h);old.l=Math.min(old.l,c.l);old.c=c.c;}
+  }
+  return [...bins.values()].sort((a,b)=>a.t-b.t);
+}
 function trend(cs){
   if(cs.length<30)return "Date insuficiente";
   const closes=cs.map(c=>c.c), e9=ema(closes,9).at(-1), e26=ema(closes,26).at(-1);
@@ -114,7 +126,7 @@ function addAlert(title, body){
 function renderAlerts(){
   $("alerts").innerHTML=alerts.length?alerts.map(a=>`<div class="alert-item"><time>${fmtTime(a.time)}</time><strong>${a.title}</strong><br>${a.body}</div>`).join(""):'<p class="small">Nu există alerte încă.</p>';
 }
-function renderChart(cs){
+function renderChart(cs, live=false){
   const el=$("priceChart");
   if(!cs || cs.length<10){el.innerHTML='<p class="small">Nu există suficiente puncte pentru grafic.</p>';return;}
   const data=cs.slice(-60), closes=data.map(c=>c.c), e9=ema(closes,9), e26=ema(closes,26);
@@ -130,22 +142,28 @@ function renderChart(cs){
   svg+=`<path d="${pathFor(e9)}" fill="none" stroke="#53d5a4" stroke-width="2.2" stroke-linejoin="round"/><path d="${pathFor(e26)}" fill="none" stroke="#f2c66d" stroke-width="2.2" stroke-linejoin="round"/>`;
   const last=data.at(-1),lastY=y(last.c);svg+=`<line x1="${left}" y1="${lastY}" x2="${W-right+4}" y2="${lastY}" stroke="#d5dfed" stroke-dasharray="4 4" opacity=".65"/>`;
   svg+=`<text x="${left}" y="${H-5}" fill="#9aa9bf" font-size="11">${new Date(data[0].t).toLocaleTimeString("ro-MD",{hour:"2-digit",minute:"2-digit"})}</text><text x="${W-right}" y="${H-5}" fill="#9aa9bf" font-size="11" text-anchor="end">${new Date(last.t).toLocaleTimeString("ro-MD",{hour:"2-digit",minute:"2-digit"})}</text></svg>`;
-  el.innerHTML=svg;$("chartRange").textContent=`${data.length} lumânări aproximative`;$("chartLast").textContent=`Ultimul preț: ${fmt(last.c)}`;
+  el.innerHTML=svg;$("chartRange").textContent=`${data.length} lumânări ${live?"FXPro":"aproximative"}`;$("chartLast").textContent=`Ultimul preț: ${fmt(last.c)}`;
 }
 
-function render(a, spotData){
-  renderChart(candles);
-  $("price").textContent=fmt(spotData.spot_usd_oz);
-  $("updated").textContent="Actualizat "+fmtTime(spotData.updated_at);
-  $("freshness").textContent=spotData.data_state?.status==="stale"||spotData.stale?"DATE ÎNVECHITE":"Date API";
-  $("source").textContent="Sursă: "+(spotData.price_source||spotData.source||"XAUS API");
-  $("changeTag").textContent=spotData.data_state?.status==="stale"||spotData.stale?"PREȚ STALE":"SPOT XAU/USD";
-  $("changeTag").className="pill "+((spotData.data_state?.status==="stale"||spotData.stale)?"neutral":"bull");
+function render(a, spotData, fx=null){
+  renderChart(candles,Boolean(fx));
+  const stale=spotData.data_state?.status==="stale"||spotData.stale;
+  $("priceLabel").textContent=fx?"Bid FXPro GOLD":"Preț spot aur / USD";
+  $("price").textContent=fmt(fx?fx.bid:spotData.spot_usd_oz);
+  $("ask").textContent=fx?fmt(fx.ask):"—";
+  $("askRow").hidden=!fx;
+  $("updated").textContent="Actualizat "+fmtTime(fx?new Date(fx.received_at*1000):spotData.updated_at);
+  $("freshness").textContent=fx?"Flux MT5 live":stale?"DATE ÎNVECHITE":"Preț extern";
+  $("source").textContent=fx?"Sursă: FXPro MT5 · "+fx.symbol:"Sursă: "+(spotData.price_source||spotData.source||"XAUS API");
+  $("changeTag").textContent=fx?"FXPRO GOLD · LIVE":stale?"PREȚ STALE":"SPOT XAU/USD";
+  $("changeTag").className="pill "+((fx||!stale)?"bull":"neutral");
+  $("priceNotice").textContent=fx?"Bid/Ask și lumânări M5 din terminalul FXPro. M15/H1 sunt agregate din lumânările M5 primite. Analiză informativă; fără ordine automate.":"Preț spot independent, nu cotația exactă FXPro. Datele sunt orientative și nu reprezintă preț executabil.";
   $("signalCard").className="signal-card "+a.side;
   $("signal").textContent=a.signal;
   $("signalReason").textContent=a.reasons.join(" · ")+". Semnalul este o evaluare euristică, nu o predicție.";
   $("confidence").textContent=a.confidence;$("confidence").className="pill "+a.side;
   $("signalTime").textContent=fmtTime(new Date());
+  $("indicatorMode").textContent=fx?"FXPro M5 · calculat din lumânări broker":"M5 aproximativ";
   $("ema").textContent=`${fmt(a.e9)} / ${fmt(a.e26)}`;
   $("rsi").textContent=fmt(a.rv);
   $("macd").textContent=`${fmt(a.mc.line)} / ${fmt(a.mc.signal)}`;
@@ -162,6 +180,7 @@ function render(a, spotData){
   lastSignal=a.signal;lastAnalysis=a;lastSpot=spotData;
 }
 async function refresh(forceSeries=false){
+  if(Date.now()-lastFxSnapshotAt<8000)return;
   try{
     setStatus("", "Se actualizează…");
     const spotPromise=getJson(API+"/spot?compact=1");
@@ -182,10 +201,33 @@ async function refresh(forceSeries=false){
     }
     const st=spot.data_state?.status;
     if(st==="unavailable") throw new Error("Prețul spot este momentan indisponibil.");
-    setStatus("ok", st==="stale"||spot.stale?"Preț vechi":"Conectat");
+    setStatus("err", st==="stale"||spot.stale?"Spot extern vechi · MT5 offline":"MT5 offline · spot extern");
   }catch(e){
     setStatus("err","Eroare date");
     $("signalReason").textContent=e.message+" Verifică conexiunea sau încearcă din nou.";
+  }
+}
+async function pollFxPro(){
+  if(document.visibilityState!=="visible")return;
+  try{
+    const fx=await getJson(FXPRO_API);
+    const received=Number(fx.received_at), age=Date.now()/1000-received;
+    if(!fx.connected||!Number.isFinite(received)||age>8||age< -5||!Array.isArray(fx.bars)||fx.bars.length<30||!Number.isFinite(Number(fx.bid))||!Number.isFinite(Number(fx.ask)))
+      throw new Error("MT5 bridge has no fresh GOLD data");
+    const incoming=fx.bars.map(b=>({t:normalizeTimestamp(b.time),o:Number(b.open),h:Number(b.high),l:Number(b.low),c:Number(b.close)}))
+      .filter(b=>[b.t,b.o,b.h,b.l,b.c].every(Number.isFinite)).sort((a,b)=>a.t-b.t);
+    if(incoming.length<30)throw new Error("MT5 history is too short");
+    candles=incoming;
+    const a=analyze(candles,aggregateCandles(candles,15),aggregateCandles(candles,60),Number(fx.bid));
+    lastFxSnapshotAt=Date.now();
+    render(a,{spot_usd_oz:Number(fx.bid),updated_at:new Date(received*1000).toISOString()},fx);
+    $("chartMode").textContent="FXPro MT5 · M5 real · EMA 9/26";
+    $("chartNotice").textContent="Lumânări și cotație primite de la FXPro MT5. M15/H1 sunt agregări din M5; semnalele sunt informative și nu execută ordine.";
+    setStatus("ok","FXPro MT5 · live");
+  }catch(e){
+    $("chartMode").textContent="M5 aproximativ · EMA 9/26";
+    $("chartNotice").textContent="Feed-ul MT5 nu este disponibil; se afișează date spot externe aproximative.";
+    if(lastSpot)setStatus("err","MT5 offline · spot extern");
   }
 }
 $("refreshBtn").addEventListener("click",()=>refresh(true));
@@ -207,3 +249,5 @@ for(const id of ["autoRefresh","inAppAlerts","browserAlerts"]){
 }
 refresh(true);
 setInterval(()=>{if($("autoRefresh").checked)refresh(false);},30000);
+pollFxPro();
+setInterval(pollFxPro,2000);
