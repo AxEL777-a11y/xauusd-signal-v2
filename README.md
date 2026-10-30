@@ -1,28 +1,42 @@
-# XAUUSD Signal Lab — GitHub Pages + FXPro MT5 (read only)
+# XAUUSD Signal Lab — GitHub Pages
 
-The dashboard tries the FXPro MT5 feed first. If MT5 is unavailable, it clearly labels and displays the independent spot API as a fallback. The dashboard and EA never place or manage orders.
+A static browser-based XAUUSD analysis dashboard for desktop and mobile. It does not place trades and does not connect to an FXPro/MT5 account.
 
-## Publish the updated site
+## Data sources and TradingView integration
 
-Replace the repository's `index.html`, `app.js`, `styles.css`, and `README.md` with the files from this folder, then commit the changes. GitHub Pages will publish the update from the configured branch. No credentials belong in these files.
+- The indicative XAU/USD spot price and intraday history are supplied by XAUS API (`https://xaus.com/api/`).
+- This is an independent spot reference, not the executable FXPro quote. Broker spreads, pricing and candles can differ.
+- The app aggregates periodic spot observations into approximate M5/M15/H1 candles. These are not broker OHLC candles or tick-by-tick data.
+- EMA 9/26, RSI 14, MACD, ATR, support and resistance are calculated in the browser from the XAUS data.
+- The embedded TradingView Technical Analysis widget displays an independent TradingView view for `OANDA:XAUUSD`. It is a visual reference only. The app does not scrape TradingView, extract its widget values, or treat them as a programmatic data feed.
+- TradingView's displayed symbol/provider may differ from FXPro. Always compare the quote and chart on the broker platform.
+- Signals are heuristic and may be wrong. They are not financial advice.
 
-## Connect MT5 on the same Windows PC
+## Indicators and signal logic
 
-1. Start `mt5-bridge/bridge.py` with `py bridge.py` and leave PowerShell open.
-2. In MT5, allow WebRequest to `http://127.0.0.1:8765` under **Tools → Options → Expert Advisors**.
-3. Compile `mt5-bridge/GOLD_Export.mq5` in MetaEditor (F7), then attach it to the FXPro `GOLD` M5 chart. The exporter sends up to 500 M5 candles and a snapshot every two seconds.
-4. Open the GitHub Pages site on the same PC. Allow the browser's local network access prompt if it appears. The price card should say **FXPRO GOLD · LIVE** and show Bid/Ask. The chart uses broker M5 candles; M15/H1 candles are aggregated from that M5 history.
-5. Check `http://127.0.0.1:8765/data` on the PC. It should show `connected:true` and the latest snapshot. If it stays false, the MT5 exporter is not reaching the local bridge.
+- EMA 9 / EMA 26
+- RSI 14
+- MACD
+- ATR 14
+- M15 and H1 trend confirmation
+- Recent support and resistance zones
+- Indicative entry, stop and target levels derived from ATR
 
-The browser will show **MT5 offline · spot extern** when the bridge is unreachable. That status is deliberate; the old spot feed must not be mistaken for an FXPro quote.
+No automated orders are sent.
 
-## Phone access
+## Publish on GitHub Pages
 
-`127.0.0.1` means the device itself, so a phone cannot reach the PC's local bridge using that address. Phone access requires a publicly reachable HTTPS backend or tunnel with access control and CORS enabled. Once configured, open the Pages app with `?feed=https://YOUR-SECURED-HOST/data` (replace with your actual HTTPS endpoint). Do not put passwords, tunnel tokens, or other secrets in the repository or URL. The included local bridge is for loopback use and must not be exposed directly to the public internet.
+1. Open the repository on GitHub.
+2. Upload the contents of this ZIP to the repository root (not the ZIP file itself).
+3. Commit the changes to the `main` branch.
+4. Open **Settings → Pages**.
+5. Select **Deploy from a branch**, branch `main`, folder `/ (root)`, then save.
+6. Open the published GitHub Pages URL.
 
-## What the live feed means
+## Important limitations
 
-- Bid and Ask are from the FXPro MT5 terminal's exact chart symbol (including a broker suffix, if present).
-- M5 candles are read from MT5. The app derives M15 and H1 candles from those M5 bars; up to 500 bars provide roughly 41 hours of history.
-- EMA, RSI, MACD, ATR and the signal remain analytical estimates calculated in the browser. They are informational, can be wrong, and do not execute trades.
-- A live quote does not establish that a signal is profitable or that the displayed quote is an executable order price.
+- GitHub Pages hosts static files. It cannot run a local MT5 terminal or the MetaTrader5 Python package.
+- The XAUS API can be unavailable, delayed, or stale. Do not use a stale-data signal.
+- TradingView is embedded as a third-party widget. Its values are not read by this app's signal engine.
+- Browser notifications may not work while the page is suspended or closed, especially on mobile.
+- Verify all setups on the FXPro/MT5 chart before making a trading decision.

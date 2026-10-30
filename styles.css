@@ -7,7 +7,6 @@ main{display:grid;gap:12px}.price-card,.signal-card,.panel{background:rgba(18,29
 @media(max-width:520px){.grid{grid-template-columns:1fr}.topbar{align-items:flex-start}.status{margin-top:5px}.price-card,.signal-card,.panel{padding:15px}.metric,.level{font-size:11px}}
 
 .chart-panel{overflow:hidden}
-.quote-ask{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #ffffff12;padding:9px 0;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.quote-ask strong{color:var(--text);font-size:14px}
 .chart-legend{display:flex;gap:13px;flex-wrap:wrap;margin:-4px 0 12px;color:var(--muted);font-size:10px}
 .chart-legend span{display:flex;align-items:center;gap:5px}
 .chart-legend i{display:inline-block;width:14px;height:3px;border-radius:2px}
@@ -16,3 +15,7 @@ main{display:grid;gap:12px}.price-card,.signal-card,.panel{background:rgba(18,29
 .price-chart svg{display:block;width:100%;height:auto;max-height:330px}
 .chart-footer{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:10px;margin-top:8px}
 @media(max-width:520px){.price-chart{min-height:190px}.chart-legend{gap:9px}}
+
+.tradingview-panel{overflow:hidden}
+.tradingview-widget-container{width:100%;min-height:400px;overflow:hidden}
+.tradingview-widget-container__widget{width:100%;min-height:400px}

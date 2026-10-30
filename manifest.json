@@ -5,6 +5,6 @@
   "display": "standalone",
   "background_color": "#0b1220",
   "theme_color": "#101827",
-  "description": "Analiză tehnică orientativă XAU/USD, fără ordine automate.",
+  "description": "Indicative XAU/USD technical analysis with a TradingView reference widget. No automated trading.",
   "icons": []
 }
