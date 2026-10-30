@@ -129,7 +129,7 @@ function renderChart(cs){
   const pathFor=arr=>{let d="",started=false;arr.forEach((v,i)=>{if(v==null)return;d+=(started?" L":"M")+x(i).toFixed(2)+" "+y(v).toFixed(2);started=true;});return d;};
   svg+=`<path d="${pathFor(e9)}" fill="none" stroke="#53d5a4" stroke-width="2.2" stroke-linejoin="round"/><path d="${pathFor(e26)}" fill="none" stroke="#f2c66d" stroke-width="2.2" stroke-linejoin="round"/>`;
   const last=data.at(-1),lastY=y(last.c);svg+=`<line x1="${left}" y1="${lastY}" x2="${W-right+4}" y2="${lastY}" stroke="#d5dfed" stroke-dasharray="4 4" opacity=".65"/>`;
-  svg+=`<text x="${left}" y="${H-5}" fill="#9aa9bf" font-size="11">${new Date(data[0].t).toLocaleTimeString("ro-MD",{hour:"2-digit",minute:"2-digit"})}</text><text x="${W-right}" y="${H-5}" fill="#9aa9bf" font-size="11" text-anchor="end">${new Date(last.t).toLocaleTimeString("ro-MD",{hour:"2-digit",minute:"2-digit"})}</text></svg>`;
+  svg+=`<text x="${left}" y="${H-5}" fill="#9aa9bf" font-size="11">${new Date(data[0].t).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})}</text><text x="${W-right}" y="${H-5}" fill="#9aa9bf" font-size="11" text-anchor="end">${new Date(last.t).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})}</text></svg>`;
   el.innerHTML=svg;$("chartRange").textContent=`${data.length} approximate candles`;$("chartLast").textContent=`Last price: ${fmt(last.c)}`;
 }
 
@@ -158,7 +158,7 @@ function render(a, spotData){
   $("stop").textContent=a.stop?fmt(a.stop):"—";
   $("target").textContent=a.target?fmt(a.target):"—";
   $("planNote").textContent=a.av?`Stop-loss/target levels are estimated using ATR (${fmt(a.av)}); they are not personal recommendations. Last price in the intraday series: ${fmt(a.last)}.`:"Insufficient history for ATR.";
-  if(lastSignal && lastSignal!==a.signal) addAlert("Semnal schimbat: "+a.signal,a.reasons.join("; "));
+  if(lastSignal && lastSignal!==a.signal) addAlert("Signal changed: "+a.signal,a.reasons.join("; "));
   lastSignal=a.signal;lastAnalysis=a;lastSpot=spotData;
 }
 async function refresh(forceSeries=false){
@@ -182,7 +182,7 @@ async function refresh(forceSeries=false){
     }
     const st=spot.data_state?.status;
     if(st==="unavailable") throw new Error("The spot price is currently unavailable.");
-    setStatus("ok", st==="stale"||spot.stale?"Stale price":"Connected");
+    setStatus("ok", st==="stale"||spot.stale?"External spot · stale":"External spot · connected");
   }catch(e){
     setStatus("err","Data error");
     $("signalReason").textContent=e.message+" Check your connection or try again.";
